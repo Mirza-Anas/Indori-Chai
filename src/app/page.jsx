@@ -4,6 +4,7 @@ import AboutUs from "../components/AboutUs";
 import ProductHome from "../components/ProductHome";
 import Introduction from "../components/Introduction";
 import Footer from "../components/Footer";
+import WhyCooseUs from "../components/WhyCooseUs";
 
 export default function Home() {
   return (
@@ -12,6 +13,7 @@ export default function Home() {
         <HomePage />
         <AboutUs />
         <ProductHome />
+        <WhyCooseUs />
         <Introduction />
       </main>
     </div>

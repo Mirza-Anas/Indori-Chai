@@ -120,7 +120,7 @@ export default function Introduction() {
   }, []);
 
   return (
-    <section id="AboutUs" ref={sectionRef} className="relative w-full pt-20 overflow-hidden bg-white">
+    <section id="AboutUs" ref={sectionRef} className="relative w-full pt-12 overflow-hidden bg-white">
       <div className="grid grid-cols-1 lg:grid-cols-2 min-h-[600px]">
 
         {/* ── IMAGE: top on mobile/tablet ── */}
@@ -154,18 +154,11 @@ export default function Introduction() {
           {/* Content */}
           <div className="w-full max-w-md mt-8 sm:ml-20 lg:ml-28 sm:mt-0">
             <p className="text-sm leading-relaxed text-gray-600 intro-p1 md:text-base">
-              Tea is an infusion made by steeping processed leaves buds or twigs of the tea bush Camellia sinensis in
-              hot water for several minutes. The processing can include oxidation heating drying and the addition of
-              other herbs flowers spices and fruits. Tea is an infusion made by steeping processed leaves buds or twigs
-              of the tea bush Camellia sinensis in hot water for several. For several minutes. The processing can
-              include oxidation heating drying and the addition of other herbs flowers spices and fruits.
+              Indori Chai was born in the heart of Indore in 2025 with a simple yet powerful vision—to bring the authentic, rich taste of freshly crafted tea directly to people’s homes. Inspired by the vibrant tea culture of the city, we set out to create a brand that captures the true essence of Indore’s beloved chai. Every blend we offer is carefully curated to deliver that perfect balance of aroma, flavor, and freshness that tea lovers truly appreciate.
             </p>
 
             <p className="relative z-10 mt-6 text-sm leading-relaxed text-gray-600 intro-p2 md:text-base">
-              The four basic type of true tea are black tea, oolong tea, green tea, and white tea. The term "herbal tea"
-              usually refers to infusions or tisane of fruit or herbs that contain no Camellia sinensis. The four basic
-              type of true tea are black tea, oolong tea, green tea, and white tea. The term "herbal tea" usually refers
-              to infusions or tisane of fruit or herbs that contain no Camellia sinensis.
+              What sets Indori Chai apart is our commitment to freshness and quality. We believe great tea should never sit in storage for months, losing its character and depth. That’s why we focus on delivering tea that retains its natural taste and aroma, ensuring every cup feels just as it should—fresh, comforting, and authentic. Our goal is simple: to make premium, flavorful tea easily accessible, so you can enjoy the true taste of Indore wherever you are.
             </p>
           </div>
 

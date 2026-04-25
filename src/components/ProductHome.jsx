@@ -23,7 +23,7 @@ export default function ProductHome() {
   }, []);
 
   return (
-    <section className="pb-10 bg-white">
+    <section className="pb-10 bg-white" id="Products">
       <div className="w-full px-4 sm:px-6 md:px-12">
         {/* Section Title */}
         <div className="flex flex-row items-center justify-center mb-8 md:mb-12">

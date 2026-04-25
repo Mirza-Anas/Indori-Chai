@@ -2,6 +2,7 @@
 import React, { useEffect, useRef } from "react";
 import { FaFacebookF, FaTwitter, FaInstagram, FaLinkedin } from "react-icons/fa";
 import gsap from "gsap";
+import Link from "next/link";
 
 const socialLinks = [
   { Icon: FaFacebookF, href: "#" },
@@ -69,18 +70,18 @@ const HomePage = () => {
       {/* Background Image */}
       <div
         className="absolute inset-0 bg-center bg-cover bg-image"
-        style={{ backgroundImage: `url("/home-bg.jpg")` }}
+        style={{ backgroundImage: `url("/tea-garden.jpg")` }}
       />
 
       {/* Gradient overlay — stronger at bottom for social icons legibility */}
-      <div className="absolute inset-0 bg-linear-to-b from-black/40 via-black/20 to-black/70" />
+      <div className="absolute inset-0 bg-linear-to-b from-black/60 via-black/40 to-black/0" />
 
       {/* Main Content — vertically centered */}
       <div className="relative z-10 flex flex-col justify-center flex-1 px-6 sm:px-10 md:px-16 lg:px-24">
         <div className="max-w-xl text-white lg:max-w-2xl">
 
           {/* Eyebrow label */}
-          <p className="hero-desc mb-3 text-[11px] sm:text-xs uppercase tracking-[0.25em] text-orange-300 font-medium">
+          <p className="hero-desc mb-3 font-bold text-[11px] sm:text-xs uppercase tracking-[0.25em] text-orange-300">
             Premium Indian Tea
           </p>
 
@@ -96,16 +97,18 @@ const HomePage = () => {
           <div className="w-10 h-px mt-5 mb-5 bg-orange-400 hero-desc" />
 
           {/* Description */}
-          <p className="max-w-sm text-sm leading-relaxed hero-desc sm:text-base md:text-lg text-white/80 sm:max-w-md">
+          <p className="max-w-sm text-sm leading-relaxed hero-desc sm:text-base md:text-lg text-white sm:max-w-md">
             Made from the finest green teas, our range is exceptionally
             healthy and rejuvenating. Enjoy our selection for every mood
             and occasion.
           </p>
 
           {/* CTA Button */}
-          <button className="hero-btn mt-8 px-8 py-3.5 text-sm sm:text-base font-medium tracking-widest uppercase text-white border border-white/70 hover:bg-white hover:text-black transition-all duration-300">
-            Explore Collection
-          </button>
+          <Link href="/products">
+            <button className="hero-btn mt-8 px-8 py-3.5 text-sm sm:text-base font-bold tracking-widest uppercase text-white border-2 bg-black/20 border-white/70 hover:bg-white hover:text-black transition-all duration-300">
+              Explore Collection
+            </button>
+          </Link>
         </div>
       </div>
 
@@ -115,9 +118,9 @@ const HomePage = () => {
           <a
             key={i}
             href={href}
-            className="transition-colors duration-300 social-icon text-white/70 hover:text-white"
+            className="transition-colors duration-300 social-icon text-white hover:text-white"
           >
-            <Icon size={18} />
+            <Icon size={22} />
           </a>
         ))}
       </div>

@@ -42,7 +42,7 @@ export default function Navbar() {
           {/* Desktop Menu */}
           <div
             className={`hidden md:flex items-center space-x-10 uppercase tracking-wider text-sm transition-colors duration-500 ${
-              scrolled || isProductsPage ? "text-black" : "text-white"
+              scrolled || isProductsPage ? "text-slate-700" : "text-white"
             }`}
           >
             <Link href="/" className="font-bold transition hover:opacity-70">
