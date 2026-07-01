@@ -10,7 +10,8 @@ export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const pathname = usePathname();
-  const isProductsPage = pathname.includes("/products") || pathname.includes("/auth") || pathname.includes("/cart");
+  const isProductsPage = (pathname.includes("/products") || pathname.includes("/auth") || pathname.includes("/cart") 
+                      || pathname.includes("/terms&conditions") || pathname.includes("/privacy-policy") || pathname.includes("/refund-policy") || pathname.includes("/shipping-policy"));
   const { cart } = useCart();
   const count = cart.length || 0;
   useEffect(() => {
