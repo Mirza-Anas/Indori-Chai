@@ -3,11 +3,12 @@ import Link from "next/link";
 
 const navLinks = [
   { label: "Products", href: "/products" },
-  { label: "About Us", href: "/about" },
+  { label: "About Us", href: "/#AboutUs" },
   { label: "Cart", href: "/cart" },
-  { label: "Login", href: "/login" },
+  { label: "Login", href: "/auth" },
   { label: "Privacy Policy", href: "/privacy-policy" },
-  { label: "Return Policy", href: "/return-policy" },
+  { label: "Refund Policy", href: "/refund-policy" },
+  { label: "Terms & Conditions", href: "/terms&conditions" },
 ];
 
 const underlineLink =
