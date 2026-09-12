@@ -6,6 +6,7 @@ import { LuChevronLeft } from "react-icons/lu";
 import { toast } from "sonner";
 import Field from "../../components/authComps/InputField";
 import axios from "axios";
+import { useAuth } from "@/context/AuthContext";
 
 // ── Submit button ─────────────────────────────────────────────────────────────
 function SubmitButton({ label, onClickFunc }) {
@@ -28,6 +29,7 @@ function SubmitButton({ label, onClickFunc }) {
 
 // ── Main page ─────────────────────────────────────────────────────────────────
 export default function AuthPage() {
+  const { setUser } = useAuth();
   const [mode, setMode] = useState("signin");
   const [showPass, setShowPass] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
@@ -89,6 +91,10 @@ export default function AuthPage() {
       } else if (mode === "signin") {
         const { data } = await axios.post("/api/auth/signin", { email, password });
         console.log("Signin response:", data);
+        setUser({
+          ...data?.user,
+          customer: data?.customer ?? null,
+        });
         toast.success("Signed in successfully!");
       }
     } catch (error) {
