@@ -1,11 +1,13 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 const AuthContext = createContext();
 const AUTH_STORAGE_KEY = "authUser";
 
 export const AuthProvider = ({ children }) => {
+    const router = useRouter();
     const [user, setUser] = useState(null);
     const [hydrated, setHydrated] = useState(false);
 
@@ -37,10 +39,29 @@ export const AuthProvider = ({ children }) => {
         }
     }, [user, hydrated]);
 
-    const logout = () => setUser(null);
+    const logout = () => {
+        setUser(null);
+        router.push("/auth");
+    };
+
+    const updateUser = (patch = {}) => {
+        setUser((prev) => {
+            if (!prev) return prev;
+            const nextCustomer = {
+                ...(prev.customer || {}),
+                ...(patch.customer || {}),
+            };
+
+            return {
+                ...prev,
+                ...patch,
+                customer: nextCustomer,
+            };
+        });
+    };
 
     return (
-        <AuthContext.Provider value={{ user, setUser, logout }}>
+        <AuthContext.Provider value={{ user, setUser, updateUser, logout }}>
             {children}
         </AuthContext.Provider>
     );

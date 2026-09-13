@@ -12,7 +12,7 @@ export default function Navbar() {
   const pathname = usePathname();
   const isProductsPage = (pathname.includes("/products") || pathname.includes("/auth") || pathname.includes("/cart") 
                       || pathname.includes("/terms&conditions") || pathname.includes("/privacy-policy") || pathname.includes("/refund-policy") 
-                      || pathname.includes("/shipping-policy") || pathname.includes("/checkout"));
+                      || pathname.includes("/shipping-policy") || pathname.includes("/checkout") || pathname.includes("/user"));
   const { cart } = useCart();
   const count = cart.length || 0;
   useEffect(() => {

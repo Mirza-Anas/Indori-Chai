@@ -2,6 +2,7 @@
 import { useState, useRef, useEffect } from "react";
 import gsap from "gsap";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { LuChevronLeft } from "react-icons/lu";
 import { toast } from "sonner";
 import Field from "../../components/authComps/InputField";
@@ -29,7 +30,8 @@ function SubmitButton({ label, onClickFunc }) {
 
 // ── Main page ─────────────────────────────────────────────────────────────────
 export default function AuthPage() {
-  const { setUser } = useAuth();
+  const router = useRouter();
+  const { user, setUser } = useAuth();
   const [mode, setMode] = useState("signin");
   const [showPass, setShowPass] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
@@ -54,6 +56,12 @@ export default function AuthPage() {
       ease: "power2.out",
     });
   }, [mode]);
+
+  useEffect(() => {
+    if (user) {
+      router.replace("/user");
+    }
+  }, [user, router]);
 
   function switchMode(next) {
     if (next === mode) return;
@@ -93,6 +101,10 @@ export default function AuthPage() {
         console.log("Signin response:", data);
         setUser({
           ...data?.user,
+          profile: {
+            name: data?.customer?.first_name || data?.customer?.display_name || "",
+            phone: data?.customer?.billing?.phone || "",
+          },
           customer: data?.customer ?? null,
         });
         toast.success("Signed in successfully!");

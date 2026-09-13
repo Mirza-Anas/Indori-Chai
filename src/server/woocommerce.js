@@ -10,7 +10,7 @@ const consumerSecret = process.env.WOO_SECRET;
 const auth = Buffer.from(`${consumerKey}:${consumerSecret}`).toString("base64");
 
 export const wcApi = axios.create({
-  baseURL: "https://example.com/wp-json/wc/v3",
+  baseURL: `${process.env.WOO_API_URL}`,
   headers: {
     Authorization: `Basic ${auth}`,
     "Content-Type": "application/json",

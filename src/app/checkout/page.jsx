@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import gsap from "gsap";
 import {
@@ -17,6 +18,7 @@ import {
   LuUser,
 } from "react-icons/lu";
 import { useCart } from "@/context/CartContext";
+import { useAuth } from "@/context/AuthContext";
 
 const INDIAN_STATES = [
   "Andhra Pradesh",
@@ -69,6 +71,39 @@ function calculateCartTotals(cartItems = []) {
   const total = subtotal + shipping + tax;
 
   return { subtotal, shipping, tax, total };
+}
+
+function buildAddress(formData, prefix) {
+  return {
+    first_name: String(formData.get(`${prefix}_first_name`) || "").trim(),
+    last_name: String(formData.get(`${prefix}_last_name`) || "").trim(),
+    address_1: String(formData.get(`${prefix}_address_1`) || "").trim(),
+    address_2: String(formData.get(`${prefix}_address_2`) || "").trim(),
+    city: String(formData.get(`${prefix}_city`) || "").trim(),
+    state: String(formData.get(`${prefix}_state`) || "").trim(),
+    postcode: String(formData.get(`${prefix}_postcode`) || "").trim(),
+    country: String(formData.get(`${prefix}_country`) || "India").trim() || "India",
+    email: String(formData.get("email") || "").trim(),
+    phone: String(formData.get("phone") || "").trim(),
+  };
+}
+
+function buildOrderItems(cartItems = []) {
+  return cartItems.map((item) => {
+    const productId = Number(item?.id);
+    const variationId = Number(item?.variation?.id ?? item?.variation_id ?? 0);
+
+    const orderItem = {
+      product_id: productId,
+      quantity: Number(item?.quantity ?? 1),
+    };
+
+    if (Number.isFinite(variationId) && variationId > 0) {
+      orderItem.variation_id = variationId;
+    }
+
+    return orderItem;
+  });
 }
 
 function formatMoney(value) {
@@ -257,10 +292,13 @@ function OrderItem({ item }) {
 }
 
 export default function CheckoutPage() {
+  const router = useRouter();
   const pageRef = useRef(null);
-  const { cart: cartItems = [] } = useCart();
+  const { cart: cartItems = [], clearCart } = useCart();
+  const { user } = useAuth();
   const [paymentMethod, setPaymentMethod] = useState("cod");
   const [billingSameAsShipping, setBillingSameAsShipping] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { subtotal, shipping, tax, total } = calculateCartTotals(cartItems);
   const isEmpty = cartItems.length === 0;
 
@@ -275,7 +313,7 @@ export default function CheckoutPage() {
     );
   }, []);
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
 
     if (isEmpty) {
@@ -283,11 +321,62 @@ export default function CheckoutPage() {
       return;
     }
 
-    toast.success(
-      paymentMethod === "cod"
-        ? "Order details captured. Cash on delivery selected."
-        : "Order details captured. Proceeding with online payment."
-    );
+    if (paymentMethod !== "cod") {
+      toast.info("Online payment is not connected yet. Please use Cash on Delivery for now.");
+      return;
+    }
+
+    const formData = new FormData(event.currentTarget);
+    const shippingAddress = buildAddress(formData, "shipping");
+    const billingAddress = billingSameAsShipping
+      ? shippingAddress
+      : buildAddress(formData, "billing");
+
+    const customerId = Number(user?.customer?.id ?? user?.customer_id ?? 0);
+    const customerNote = String(formData.get("order_notes") || "").trim();
+
+    const payload = {
+      billing: billingAddress,
+      shipping: shippingAddress,
+      items: buildOrderItems(cartItems),
+      payment_method: "cod",
+      customer_note: customerNote,
+      ...(Number.isFinite(customerId) && customerId > 0 ? { customer_id: customerId } : {}),
+    };
+
+    try {
+      setIsSubmitting(true);
+      const createOrderPromise = fetch("/api/order/create-order", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      }).then(async (response) => {
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data?.error || "Failed to create order");
+        }
+
+        return data;
+      });
+
+      toast.promise(createOrderPromise, {
+        loading: "Placing your order...",
+        success: (result) =>
+          `Order placed successfully${result?.order?.id ? ` #${result.order.id}` : ""}.`,
+        error: (error) => error?.message || "Failed to place the order",
+      });
+
+      await createOrderPromise;
+      clearCart?.();
+      router.push("/products");
+    } catch (error) {
+      console.error("Checkout order error:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (isEmpty) {
@@ -357,14 +446,27 @@ export default function CheckoutPage() {
               </div>
 
               <div className="grid gap-4 sm:grid-cols-2">
-                <CheckoutField label="First name" name="first_name" placeholder="Aarav" autoComplete="given-name" />
-                <CheckoutField label="Last name" name="last_name" placeholder="Sharma" autoComplete="family-name" />
+                <CheckoutField
+                  label="First name"
+                  name="first_name"
+                  placeholder="Aarav"
+                  autoComplete="given-name"
+                  required
+                />
+                <CheckoutField
+                  label="Last name"
+                  name="last_name"
+                  placeholder="Sharma"
+                  autoComplete="family-name"
+                  required
+                />
                 <CheckoutField
                   label="Email"
                   name="email"
                   type="email"
                   placeholder="aarav@example.com"
                   autoComplete="email"
+                  required
                 />
                 <CheckoutField
                   label="Phone"
@@ -372,6 +474,7 @@ export default function CheckoutPage() {
                   type="tel"
                   placeholder="+91 98xxxxxx10"
                   autoComplete="tel"
+                  required
                 />
               </div>
             </section>
@@ -513,17 +616,19 @@ export default function CheckoutPage() {
               {paymentMethod === "cod" ? (
                 <button
                   type="submit"
+                  disabled={isSubmitting}
                   className="inline-flex w-full items-center justify-center gap-2 bg-[#b5433a] px-5 py-3.5 text-[11px] font-semibold uppercase tracking-[0.25em] text-white transition-colors duration-300 hover:bg-[#9b3830]"
                 >
-                  Place order
+                  {isSubmitting ? "Placing order..." : "Place order"}
                   <LuArrowRight size={13} strokeWidth={2} />
                 </button>
               ) : (
                 <button
                   type="submit"
+                  disabled={isSubmitting}
                   className="inline-flex w-full items-center justify-center gap-2 bg-[#b5433a] px-5 py-3.5 text-[11px] font-semibold uppercase tracking-[0.25em] text-white transition-colors duration-300 hover:bg-[#9b3830]"
                 >
-                  Proceed to pay
+                  {isSubmitting ? "Processing..." : "Proceed to pay"}
                   <LuArrowRight size={13} strokeWidth={2} />
                 </button>
               )}

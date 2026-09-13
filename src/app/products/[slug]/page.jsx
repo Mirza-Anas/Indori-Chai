@@ -3,7 +3,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { LuChevronLeft, LuChevronRight, LuShoppingCart, LuShoppingBag } from "react-icons/lu";
 import Link from "next/link";
 import gsap from "gsap";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import axios from "axios";
 import { useCart } from "@/context/CartContext";
 
@@ -26,6 +26,7 @@ import { useCart } from "@/context/CartContext";
 
 export default function ProductDetail() {
   const pathname = usePathname();
+  const router = useRouter();
   const { addToCart } = useCart();
   const lastSegment = pathname.split("/").filter(Boolean).pop();
   // ── State ──────────────────────────────────────────────────────────────────
@@ -135,13 +136,18 @@ export default function ProductDetail() {
     addToCart({...product, variation: activeVariation, weight: activeVariation?.weight, quantity});
   }
 
+  const shopNow = () => {
+    updateCart(product);
+    router.push("/checkout");
+  };
+
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
     <div className="min-h-screen pt-20 font-sans bg-white">
       {/* ── Main grid ── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 min-h-[calc(100vh-80px)]">
         {/* ═══ LEFT — Image panel ══════════════════════════════════════════ */}
-        <div className="relative flex items-center justify-center bg-gray-50 min-h-[360px] sm:min-h-[460px] lg:min-h-0">
+        <div className="relative flex items-start justify-center bg-gray-50 min-h-[360px] sm:min-h-[460px] lg:min-h-0">
           {/* ── Back nav ── */}
           <div className="absolute top-0 left-0 z-10 px-6 pt-6 md:px-10">
             <Link
@@ -164,7 +170,7 @@ export default function ProductDetail() {
           )}
 
           {/* Product image */}
-          <div className="flex items-center justify-center w-full z-0 min-h-[50vh] sm:h-[calc(100vh-80px)] overflow-hidden">
+          <div className="flex items-center justify-center w-full z-0 min-h-[50vh] sm:h-[calc(100vh-70px)] overflow-hidden">
             {images[activeImage] ? (
               <img
                 ref={imgRef}
@@ -205,16 +211,16 @@ export default function ProductDetail() {
         </div>
 
         {/* ═══ RIGHT — Product info ══════════════════════════════════════════ */}
-        <div className="flex flex-col justify-between px-8 py-10 sm:px-12 lg:px-16 lg:py-14">
+        <div className="flex flex-col justify-start px-8 py-8 sm:px-12 lg:px-16 lg:py-6">
           {/* ── Tab bar (Description only, static) ── */}
-          <div className="mb-8 border-b border-gray-200">
+          <div className="mb-6 border-b border-gray-200">
             <div className="inline-block pb-3 border-b-2 border-[#b5433a]">
               <span className="text-sm font-medium tracking-wide text-gray-800">Description</span>
             </div>
           </div>
 
           {/* ── Name + subtitle ── */}
-          <div className="mb-1">
+          <div className="mb-0">
             <h1 className="font-serif text-4xl leading-tight tracking-tight text-gray-900 sm:text-5xl">
               {product?.name ?? <span className="inline-block w-56 h-10 bg-gray-200 rounded animate-pulse" />}
             </h1>
@@ -224,14 +230,14 @@ export default function ProductDetail() {
           </div>
 
           {/* ── Price ── */}
-          <div className="mt-4 mb-6">
+          <div className="mt-3 mb-5">
             <p ref={priceRef} className="text-3xl font-serif text-[#b5433a]">
               {displayPrice !== "—" ? `₹${displayPrice}` : "—"}
             </p>
           </div>
 
           {/* ── Description ── */}
-          <p className="max-w-md text-sm leading-5 sm:leading-7 sm:text-center text-gray-500 lg:text-left">
+          <p className="max-w-md text-sm leading-5 sm:leading-7 text-left text-gray-500">
             {product?.description ? (
               <span dangerouslySetInnerHTML={{ __html: product.description }} />
             ) : (
@@ -295,7 +301,7 @@ export default function ProductDetail() {
           </div>
 
           {/* ── Action buttons ── */}
-          <div className="flex flex-wrap gap-3 mt-10">
+          <div className="flex flex-wrap gap-3 mt-8">
             {/* Add to Cart */}
             <button
               ref={addCartBtnRef}
@@ -309,6 +315,7 @@ export default function ProductDetail() {
             {/* Shop Now */}
             <button
               ref={shopBtnRef}
+              onClick={shopNow}
               className="flex w-full sm:w-auto justify-center items-center gap-2 px-8 py-3.5 bg-[#b5433a] text-white text-xs tracking-widest uppercase font-semibold hover:bg-[#9b3830] transition-colors duration-300"
             >
               <LuShoppingBag size={15} strokeWidth={1.5} />
