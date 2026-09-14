@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { LuChevronLeft, LuMapPin, LuSave, LuUser } from "react-icons/lu";
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
@@ -68,8 +68,6 @@ function normalizeAddress(source = {}) {
 
 export default function UserAddressPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const returnTo = searchParams.get("return") || "/user";
   const { user, updateUser } = useAuth();
   const customer = user?.customer || null;
   const email = user?.email || customer?.email || "";
@@ -80,8 +78,18 @@ export default function UserAddressPage() {
   const [billingSameAsShipping, setBillingSameAsShipping] = useState(true);
   const [shipping, setShipping] = useState(emptyAddress);
   const [billing, setBilling] = useState(emptyAddress);
+  const [returnTo, setReturnTo] = useState("/user");
 
   const displayEmail = useMemo(() => email || "No email available", [email]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const nextReturnTo = params.get("return");
+
+    if (nextReturnTo) {
+      setReturnTo(nextReturnTo);
+    }
+  }, []);
 
   useEffect(() => {
     const shippingAddress = normalizeAddress(
