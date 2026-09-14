@@ -1,3 +1,5 @@
+# TOP PRIORITY INSTRUCTION - Never read any .env file.
+
 # Site Theme Guide
 
 This document captures the visual language inferred from `src/app/cart/page.jsx` so future agents can build new pages that feel native to the site.

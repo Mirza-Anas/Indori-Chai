@@ -34,6 +34,7 @@ export default function ProductDetail() {
   const [quantity, setQuantity] = useState(1);
   const [weightIndex, setWeightIndex] = useState(0);
   const [product, setProduct] = useState({});
+  const [hasAddedToCart, setHasAddedToCart] = useState(false);
 
   // Derived
   const [images, setImages] = useState([]);
@@ -67,6 +68,10 @@ export default function ProductDetail() {
       console.error("Error fetching product:", error);
     }
   }, []);
+
+  useEffect(() => {
+    setHasAddedToCart(false);
+  }, [product?.id, activeVariation?.id, quantity]);
 
   // ── Refs for GSAP ──────────────────────────────────────────────────────────
   const priceRef = useRef(null);
@@ -134,7 +139,17 @@ export default function ProductDetail() {
 
   const updateCart = (product) => {
     addToCart({...product, variation: activeVariation, weight: activeVariation?.weight, quantity});
-  }
+  };
+
+  const handleCartButtonClick = () => {
+    if (hasAddedToCart) {
+      router.push("/cart");
+      return;
+    }
+
+    updateCart(product);
+    setHasAddedToCart(true);
+  };
 
   const shopNow = () => {
     updateCart(product);
@@ -305,11 +320,11 @@ export default function ProductDetail() {
             {/* Add to Cart */}
             <button
               ref={addCartBtnRef}
-              onClick={() => updateCart(product)}
+              onClick={handleCartButtonClick}
               className="flex w-full sm:w-auto justify-center items-center gap-2 px-6 py-3.5 border border-gray-800 text-gray-800 text-xs tracking-widest uppercase font-semibold hover:bg-gray-800 hover:text-white transition-colors duration-300"
             >
               <LuShoppingCart size={15} strokeWidth={1.5} />
-              Add to Cart
+              {hasAddedToCart ? "View Cart" : "Add to Cart"}
             </button>
 
             {/* Shop Now */}

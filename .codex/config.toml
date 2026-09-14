@@ -1,4 +1,0 @@
-[permissions.project-edit.filesystem.":workspace_roots"]
-"**/.env" = "deny"
-"**/.env.*" = "deny"
-"**/*.env" = "deny"
