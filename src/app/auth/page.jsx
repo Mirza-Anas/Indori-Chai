@@ -63,6 +63,28 @@ export default function AuthPage() {
     }
   }, [user, router]);
 
+  const storeSignedInUser = (data) => {
+    const customer = data?.customer ?? null;
+    const shippingAddress = customer?.shipping || null;
+    const billingAddress = customer?.billing || null;
+
+    setUser({
+      ...data?.user,
+      profile: {
+        name: customer?.first_name || customer?.display_name || "",
+        phone:
+          billingAddress?.phone ||
+          shippingAddress?.phone ||
+          "",
+      },
+      address: {
+        shipping: shippingAddress,
+        billing: billingAddress,
+      },
+      customer,
+    });
+  };
+
   function switchMode(next) {
     if (next === mode) return;
     gsap.fromTo(formRef.current, { autoAlpha: 0, y: 14 }, { autoAlpha: 1, y: 0, duration: 0.4, ease: "power2.out" });
@@ -98,15 +120,8 @@ export default function AuthPage() {
         switchMode("signin");
       } else if (mode === "signin") {
         const { data } = await axios.post("/api/auth/signin", { email, password });
-        console.log("Signin response:", data);
-        setUser({
-          ...data?.user,
-          profile: {
-            name: data?.customer?.first_name || data?.customer?.display_name || "",
-            phone: data?.customer?.billing?.phone || "",
-          },
-          customer: data?.customer ?? null,
-        });
+        console.log(data);
+        storeSignedInUser(data);
         toast.success("Signed in successfully!");
       }
     } catch (error) {

@@ -128,7 +128,7 @@ function CheckoutField({ label, name, type = "text", placeholder, autoComplete, 
   );
 }
 
-function CheckoutSelect({ label, name, autoComplete, children, disabled = false }) {
+function CheckoutSelect({ label, name, autoComplete, children, disabled = false, ...selectProps }) {
   return (
     <label className="block">
       <span className="mb-2 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.22em] text-gray-500">
@@ -138,6 +138,7 @@ function CheckoutSelect({ label, name, autoComplete, children, disabled = false 
         name={name}
         autoComplete={autoComplete}
         disabled={disabled}
+        {...selectProps}
         className="w-full border border-gray-300 bg-white px-4 py-3 text-sm text-gray-800 outline-none transition-colors focus:border-[#b5433a] disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-500"
       >
         {children}
@@ -146,7 +147,7 @@ function CheckoutSelect({ label, name, autoComplete, children, disabled = false 
   );
 }
 
-function CheckoutTextarea({ label, name, placeholder, rows = 4 }) {
+function CheckoutTextarea({ label, name, placeholder, rows = 4, ...textareaProps }) {
   return (
     <label className="block">
       <span className="mb-2 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.22em] text-gray-500">
@@ -156,23 +157,34 @@ function CheckoutTextarea({ label, name, placeholder, rows = 4 }) {
         name={name}
         rows={rows}
         placeholder={placeholder}
+        {...textareaProps}
         className="w-full resize-none border border-gray-300 bg-white px-4 py-3 text-sm text-gray-800 outline-none transition-colors placeholder:text-gray-400 focus:border-[#b5433a]"
       />
     </label>
   );
 }
 
-function AddressSection({ title, eyebrow, icon: Icon, prefix }) {
+function AddressSection({ title, eyebrow, icon: Icon, prefix, defaults = {}, actionHref }) {
   return (
     <section className="border border-gray-200 bg-white p-6 sm:p-7">
-      <div className="mb-6 flex items-center gap-3">
-        <span className="inline-flex h-10 w-10 items-center justify-center border border-gray-200 bg-[#faf9f6] text-gray-600">
-          <Icon size={18} strokeWidth={1.8} />
-        </span>
-        <div>
-          <h2 className="font-serif text-2xl text-gray-800">{title}</h2>
-          <p className="mt-1 text-xs uppercase tracking-[0.22em] text-gray-400">{eyebrow}</p>
+      <div className="mb-6 flex items-start justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <span className="inline-flex h-10 w-10 items-center justify-center border border-gray-200 bg-[#faf9f6] text-gray-600">
+            <Icon size={18} strokeWidth={1.8} />
+          </span>
+          <div>
+            <h2 className="font-serif text-2xl text-gray-800">{title}</h2>
+            <p className="mt-1 text-xs uppercase tracking-[0.22em] text-gray-400">{eyebrow}</p>
+          </div>
         </div>
+        {actionHref && (
+          <Link
+            href={actionHref}
+            className="text-[10px] font-semibold uppercase tracking-[0.22em] text-gray-500 transition-colors hover:text-[#b5433a]"
+          >
+            Edit address
+          </Link>
+        )}
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
@@ -181,12 +193,14 @@ function AddressSection({ title, eyebrow, icon: Icon, prefix }) {
           name={`${prefix}_first_name`}
           placeholder="Aarav"
           autoComplete={`${prefix} given-name`}
+          defaultValue={defaults.first_name || ""}
         />
         <CheckoutField
           label="Last name"
           name={`${prefix}_last_name`}
           placeholder="Sharma"
           autoComplete={`${prefix} family-name`}
+          defaultValue={defaults.last_name || ""}
         />
         <div className="sm:col-span-2">
           <CheckoutField
@@ -194,6 +208,7 @@ function AddressSection({ title, eyebrow, icon: Icon, prefix }) {
             name={`${prefix}_address_1`}
             placeholder="House / flat no., street, area"
             autoComplete={`${prefix} address-line1`}
+            defaultValue={defaults.address_1 || ""}
           />
         </div>
         <div className="sm:col-span-2">
@@ -202,10 +217,22 @@ function AddressSection({ title, eyebrow, icon: Icon, prefix }) {
             name={`${prefix}_address_2`}
             placeholder="Landmark, building name, etc. (optional)"
             autoComplete={`${prefix} address-line2`}
+            defaultValue={defaults.address_2 || ""}
           />
         </div>
-        <CheckoutField label="City" name={`${prefix}_city`} placeholder="Indore" autoComplete={`${prefix} address-level2`} />
-        <CheckoutSelect label="State" name={`${prefix}_state`} autoComplete={`${prefix} address-level1`}>
+        <CheckoutField
+          label="City"
+          name={`${prefix}_city`}
+          placeholder="Indore"
+          autoComplete={`${prefix} address-level2`}
+          defaultValue={defaults.city || ""}
+        />
+        <CheckoutSelect
+          label="State"
+          name={`${prefix}_state`}
+          autoComplete={`${prefix} address-level1`}
+          defaultValue={defaults.state || ""}
+        >
           <option value="">Select state</option>
           {INDIAN_STATES.map((state) => (
             <option key={state} value={state}>
@@ -218,6 +245,7 @@ function AddressSection({ title, eyebrow, icon: Icon, prefix }) {
           name={`${prefix}_postcode`}
           placeholder="452001"
           autoComplete={`${prefix} postal-code`}
+          defaultValue={defaults.postcode || ""}
         />
         <CheckoutField
           label="Country"
@@ -294,13 +322,34 @@ function OrderItem({ item }) {
 export default function CheckoutPage() {
   const router = useRouter();
   const pageRef = useRef(null);
+  const signInNoticeShown = useRef(false);
   const { cart: cartItems = [], clearCart } = useCart();
-  const { user } = useAuth();
+  const { user, hydrated } = useAuth();
   const [paymentMethod, setPaymentMethod] = useState("cod");
   const [billingSameAsShipping, setBillingSameAsShipping] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { subtotal, shipping, tax, total } = calculateCartTotals(cartItems);
   const isEmpty = cartItems.length === 0;
+  const customer = user?.customer || null;
+  const profile = user?.profile || {};
+  const customerAddress = user?.address || {};
+  const customerEmail = user?.email || customer?.email || "";
+  const contactName =
+    profile.name || customer?.first_name || customer?.display_name || "";
+  const contactPhone =
+    profile.phone || customer?.billing?.phone || customer?.shipping?.phone || "";
+  const shippingDefaults = customerAddress.shipping || customer?.shipping || {};
+  const billingDefaults = customerAddress.billing || customer?.billing || {};
+
+  useEffect(() => {
+    if (hydrated && !user) {
+      if (!signInNoticeShown.current) {
+        toast.error("Please sign in first to place your order.");
+        signInNoticeShown.current = true;
+      }
+      router.replace("/auth");
+    }
+  }, [hydrated, router, user]);
 
   useEffect(() => {
     if (!pageRef.current) return;
@@ -333,6 +382,7 @@ export default function CheckoutPage() {
       : buildAddress(formData, "billing");
 
     const customerId = Number(user?.customer?.id ?? user?.customer_id ?? 0);
+    const syncedCustomerId = Number(customer?.id ?? customerId ?? 0);
     const customerNote = String(formData.get("order_notes") || "").trim();
 
     const payload = {
@@ -341,7 +391,8 @@ export default function CheckoutPage() {
       items: buildOrderItems(cartItems),
       payment_method: "cod",
       customer_note: customerNote,
-      ...(Number.isFinite(customerId) && customerId > 0 ? { customer_id: customerId } : {}),
+      customer_email: customerEmail,
+      ...(Number.isFinite(syncedCustomerId) && syncedCustomerId > 0 ? { customer_id: syncedCustomerId } : {}),
     };
 
     try {
@@ -378,6 +429,30 @@ export default function CheckoutPage() {
       setIsSubmitting(false);
     }
   };
+
+  if (!hydrated) {
+    return (
+      <div className="min-h-screen bg-[#faf9f6] pt-12">
+        <div className="mx-auto max-w-6xl px-4 py-10 sm:px-8 sm:py-14">
+          <div className="border border-gray-200 bg-white p-8 text-center text-sm text-gray-500">
+            Loading checkout...
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-[#faf9f6] pt-12">
+        <div className="mx-auto max-w-6xl px-4 py-10 sm:px-8 sm:py-14">
+          <div className="border border-gray-200 bg-white p-8 text-center text-sm text-gray-500">
+            Redirecting to sign in...
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (isEmpty) {
     return (
@@ -432,7 +507,11 @@ export default function CheckoutPage() {
 
         <form onSubmit={handleSubmit} className="mt-10 flex flex-col gap-8 lg:flex-row lg:items-start lg:gap-12">
           <div className="flex-1 space-y-8 min-w-0">
-            <section data-animate className="border border-gray-200 bg-white p-6 sm:p-7">
+            <section
+              key={`contact-${customer?.id || customerEmail || "guest"}`}
+              data-animate
+              className="border border-gray-200 bg-white p-6 sm:p-7"
+            >
               <div className="mb-6 flex items-center gap-3">
                 <span className="inline-flex h-10 w-10 items-center justify-center border border-gray-200 bg-[#faf9f6] text-gray-600">
                   <LuUser size={18} strokeWidth={1.8} />
@@ -451,6 +530,7 @@ export default function CheckoutPage() {
                   name="first_name"
                   placeholder="Aarav"
                   autoComplete="given-name"
+                  defaultValue={contactName.split(" ")[0] || ""}
                   required
                 />
                 <CheckoutField
@@ -458,6 +538,7 @@ export default function CheckoutPage() {
                   name="last_name"
                   placeholder="Sharma"
                   autoComplete="family-name"
+                  defaultValue={contactName.split(" ").slice(1).join(" ") || ""}
                   required
                 />
                 <CheckoutField
@@ -466,6 +547,7 @@ export default function CheckoutPage() {
                   type="email"
                   placeholder="aarav@example.com"
                   autoComplete="email"
+                  defaultValue={customerEmail}
                   required
                 />
                 <CheckoutField
@@ -474,16 +556,20 @@ export default function CheckoutPage() {
                   type="tel"
                   placeholder="+91 98xxxxxx10"
                   autoComplete="tel"
+                  defaultValue={contactPhone}
                   required
                 />
               </div>
             </section>
 
             <AddressSection
+              key={`shipping-${customer?.id || customerEmail || "guest"}`}
               title="Shipping address"
               eyebrow="Where should we deliver your order?"
               icon={LuMapPin}
               prefix="shipping"
+              defaults={shippingDefaults || billingDefaults || {}}
+              actionHref="/user/address?return=/checkout"
             />
 
             <section data-animate className="border border-gray-200 bg-white p-6 sm:p-7">
@@ -508,10 +594,13 @@ export default function CheckoutPage() {
             {!billingSameAsShipping && (
               <div data-animate>
                 <AddressSection
+                  key={`billing-${customer?.id || customerEmail || "guest"}`}
                   title="Billing address"
                   eyebrow="Enter a different billing address"
                   icon={LuPackage}
                   prefix="billing"
+                  defaults={billingDefaults || shippingDefaults || {}}
+                  actionHref="/user/address?return=/checkout"
                 />
               </div>
             )}
@@ -587,11 +676,13 @@ export default function CheckoutPage() {
                   </span>
                   <div>
                     <h3 className="font-serif text-xl text-gray-800">Payment</h3>
-                    <p className="mt-1 text-[10px] uppercase tracking-[0.22em] text-gray-400">
+                <p className="mt-1 text-[10px] uppercase tracking-[0.22em] text-gray-400">
                       Select a payment method
                     </p>
                   </div>
                 </div>
+
+                <p className="mb-3 text-[11px] text-gray-400">Need to change your address?</p>
 
                 <div className="grid gap-3">
                   <PaymentOption

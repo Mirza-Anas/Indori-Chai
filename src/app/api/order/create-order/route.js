@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { wcApi } from "@/server/woocommerce";
+import { upsertCustomer } from "@/server/woocommerce-customer";
 
 const baseUrl = process.env.WOO_API_URL;
 
@@ -109,13 +110,32 @@ export const POST = async (request) => {
     }
 
     const lineItems = await Promise.all(items.map(fetchProductPricing));
+    const customerEmail = String(
+      billing.email || shipping.email || payload?.customer_email || ""
+    ).trim().toLowerCase();
+
+    if (!customerEmail) {
+      return NextResponse.json(
+        { error: "Customer email is required" },
+        { status: 400 }
+      );
+    }
+
+    const syncedCustomer = await upsertCustomer({
+      customerId: parseId(customer_id),
+      email: customerEmail,
+      first_name: billing.first_name || shipping.first_name || "",
+      last_name: billing.last_name || shipping.last_name || "",
+      billing: buildAddress(billing),
+      shipping: buildAddress(shipping),
+    });
 
     const orderData = {
       payment_method: paymentConfig.payment_method,
       payment_method_title: paymentConfig.payment_method_title,
       set_paid: paymentConfig.set_paid,
       status: paymentConfig.status,
-      customer_id: parseId(customer_id) || undefined,
+      customer_id: syncedCustomer?.id || undefined,
       billing: buildAddress(billing),
       shipping: buildAddress(shipping),
       customer_note,

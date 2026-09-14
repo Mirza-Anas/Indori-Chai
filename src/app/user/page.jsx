@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { LuChevronRight, LuLogOut, LuUser } from "react-icons/lu";
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
@@ -13,34 +13,25 @@ export default function UserPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [editingName, setEditingName] = useState(false);
   const [editingPhone, setEditingPhone] = useState(false);
-
-  useEffect(() => {
-    if (user === null) return;
-  }, [user]);
-
-  const email = useMemo(() => {
-    return user?.email || user?.customer?.email || "";
-  }, [user]);
+  const customer = user?.customer || null;
+  const profile = user?.profile || {};
+  const email = user?.email || customer?.email || "";
+  const shippingAddress = user?.address?.shipping || customer?.shipping || null;
+  const billingAddress = user?.address?.billing || customer?.billing || null;
 
   useEffect(() => {
     if (!user) return;
 
     const initialName =
-      user?.profile?.name ||
-      user?.customer?.first_name ||
-      user?.customer?.display_name ||
-      "";
+      profile.name || customer?.first_name || customer?.display_name || "";
     const initialPhone =
-      user?.profile?.phone ||
-      user?.customer?.phone ||
-      user?.customer?.billing?.phone ||
-      "";
+      profile.phone || customer?.phone || customer?.billing?.phone || customer?.shipping?.phone || "";
 
     setName(initialName);
     setPhone(initialPhone);
     setEditingName(false);
     setEditingPhone(false);
-  }, [user]);
+  }, [user, customer, profile.name, profile.phone]);
 
   if (!user) {
     return (
@@ -74,6 +65,18 @@ export default function UserPage() {
         profile: {
           name: name.trim(),
           phone: phone.trim(),
+        },
+        customer: {
+          ...(user?.customer || {}),
+          first_name: name.trim(),
+          billing: {
+            ...(user?.customer?.billing || {}),
+            phone: phone.trim(),
+          },
+          shipping: {
+            ...(user?.customer?.shipping || {}),
+            phone: phone.trim(),
+          },
         },
       });
       setEditingName(false);
@@ -176,6 +179,59 @@ export default function UserPage() {
               >
                 {isSaving ? "Saving..." : "Save Profile"}
               </button>
+            </div>
+
+            <div className="mt-8 border-t border-gray-200 pt-6">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-gray-400">
+                    Current Address
+                  </p>
+                  <div className="mt-3 text-sm leading-6 text-gray-700">
+                    {shippingAddress || billingAddress ? (
+                      <div className="space-y-1">
+                        <p className="font-medium text-gray-800">
+                          {(
+                            shippingAddress?.first_name ||
+                            billingAddress?.first_name ||
+                            ""
+                          ).trim()}{" "}
+                          {(
+                            shippingAddress?.last_name ||
+                            billingAddress?.last_name ||
+                            ""
+                          ).trim()}
+                        </p>
+                        <p>
+                          {shippingAddress?.address_1 || billingAddress?.address_1 || "No address saved"}
+                        </p>
+                        <p>
+                          {shippingAddress?.address_2 || billingAddress?.address_2
+                            ? `${shippingAddress?.address_2 || billingAddress?.address_2}, `
+                            : ""}
+                          {shippingAddress?.city || billingAddress?.city || ""}
+                          {shippingAddress?.state || billingAddress?.state
+                            ? `, ${shippingAddress?.state || billingAddress?.state}`
+                            : ""}
+                        </p>
+                        <p>
+                          {shippingAddress?.postcode || billingAddress?.postcode || ""}{" "}
+                          {shippingAddress?.country || billingAddress?.country || ""}
+                        </p>
+                      </div>
+                    ) : (
+                      <p className="text-gray-400">No address saved yet.</p>
+                    )}
+                  </div>
+                </div>
+
+                <Link
+                  href="/user/address?return=/user"
+                  className="text-[10px] font-semibold uppercase tracking-[0.22em] text-gray-500 transition-colors hover:text-[#b5433a]"
+                >
+                  Edit address
+                </Link>
+              </div>
             </div>
           </section>
 
