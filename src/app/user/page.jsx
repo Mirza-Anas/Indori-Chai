@@ -247,6 +247,14 @@ export default function UserPage() {
               </button>
 
               <Link
+                href="/user/orders"
+                className="inline-flex w-full items-center justify-center gap-2 border border-gray-300 px-5 py-3.5 text-[11px] font-semibold uppercase tracking-[0.25em] text-gray-700 transition-colors hover:border-gray-400 hover:bg-gray-50"
+              >
+                View Orders
+                <LuChevronRight size={14} strokeWidth={2} />
+              </Link>
+
+              <Link
                 href="/products"
                 className="inline-flex w-full items-center justify-center gap-2 border border-gray-300 px-5 py-3.5 text-[11px] font-semibold uppercase tracking-[0.25em] text-gray-700 transition-colors hover:border-gray-400 hover:bg-gray-50"
               >
