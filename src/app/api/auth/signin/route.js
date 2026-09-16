@@ -7,6 +7,7 @@ const resendCooldown = new Map();
 const RESEND_INTERVAL = 120 * 1000;
 
 export const POST = async (request) => {
+  console.log("Sign in request received");
   try {
     const { email, password } = await request.json();
 
@@ -64,7 +65,7 @@ export const POST = async (request) => {
     );
   } catch (error) {
     console.error("Error signing in user:", error);
-
+    console.log(error);
     if (error?.code === "auth/user-not-found") {
       return NextResponse.json(
         { message: "User not found. Please register." },

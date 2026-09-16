@@ -1,6 +1,13 @@
 import { NextResponse } from "next/server";
+import { randomUUID } from "crypto";
+import {
+  MetaInfo,
+  PrefillUserLoginDetails,
+  StandardCheckoutPayRequest,
+} from "@phonepe-pg/pg-sdk-node";
 import { wcApi } from "@/server/woocommerce";
 import { upsertCustomer } from "@/server/woocommerce-customer";
+import { phonePeClient } from "@/server/phonepe-class";
 
 const baseUrl = process.env.WOO_API_URL;
 
@@ -109,6 +116,9 @@ export const POST = async (request) => {
       );
     }
 
+    const merchantOrderId =
+      payment_method === "online" ? `order-${randomUUID()}` : null;
+
     const lineItems = await Promise.all(items.map(fetchProductPricing));
     const customerEmail = String(
       billing.email || shipping.email || payload?.customer_email || ""
@@ -139,6 +149,20 @@ export const POST = async (request) => {
       billing: buildAddress(billing),
       shipping: buildAddress(shipping),
       customer_note,
+      ...(merchantOrderId
+        ? {
+            meta_data: [
+              {
+                key: "phonepe_merchant_order_id",
+                value: merchantOrderId,
+              },
+              {
+                key: "phonepe_payment_attempt",
+                value: "1",
+              },
+            ],
+          }
+        : {}),
       line_items: lineItems.map((item) => ({
         product_id: item.product_id,
         quantity: item.quantity,
@@ -147,6 +171,66 @@ export const POST = async (request) => {
     };
 
     const { data } = await wcApi.post(`${baseUrl}/orders`, orderData);
+
+    if (payment_method === "online") {
+      const amountInPaise = Math.round(Number(data.total || 0) * 100);
+      const phoneNumber = String(
+        billing.phone || shipping.phone || ""
+      ).trim();
+      const redirectUrl = new URL(
+        `/user/orders/${data.id}`,
+        request.url
+      ).toString();
+
+      if (!amountInPaise) {
+        throw new Error("Order total must be greater than zero");
+      }
+
+      const payRequestBuilder = StandardCheckoutPayRequest.builder()
+        .merchantOrderId(merchantOrderId)
+        .amount(amountInPaise)
+        .redirectUrl(redirectUrl)
+        .expireAfter(3600)
+        .message(`Payment for order ${data.id}`);
+
+      if (phoneNumber) {
+        payRequestBuilder.prefillUserLoginDetails(
+          PrefillUserLoginDetails.builder()
+            .phoneNumber(phoneNumber)
+            .build()
+        );
+      }
+
+      payRequestBuilder.metaInfo(
+        MetaInfo.builder()
+          .udf1(String(data.id))
+          .udf2(merchantOrderId)
+          .build()
+      );
+
+      const paymentResponse = await phonePeClient.pay(
+        payRequestBuilder.build()
+      );
+      const checkoutPageUrl =
+        paymentResponse?.redirectUrl || paymentResponse?.redirect_url;
+
+      if (!checkoutPageUrl) {
+        throw new Error("PhonePe did not return a checkout URL");
+      }
+
+      return NextResponse.json(
+        {
+          message: "Order created and payment initiated",
+          order: data,
+          payment: {
+            provider: "phonepe",
+            merchantOrderId,
+            redirectUrl: checkoutPageUrl,
+          },
+        },
+        { status: 201 }
+      );
+    }
 
     return NextResponse.json(
       {

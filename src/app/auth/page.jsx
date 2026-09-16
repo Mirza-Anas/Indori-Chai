@@ -63,6 +63,28 @@ export default function AuthPage() {
     }
   }, [user, router]);
 
+  useEffect(() => {
+    const strongPassword = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
+    if (!passTooltipVisible || !strongPassword.test(password)) return;
+
+    const timeoutId = window.setTimeout(() => {
+      setPassTooltipVisible(false);
+    }, 1000);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [password, passTooltipVisible]);
+
+  useEffect(() => {
+    const strongPassword = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
+    if (!confirmTooltipVisible || !strongPassword.test(confirmPassword)) return;
+
+    const timeoutId = window.setTimeout(() => {
+      setConfirmTooltipVisible(false);
+    }, 1000);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [confirmPassword, confirmTooltipVisible]);
+
   const storeSignedInUser = (data) => {
     const customer = data?.customer ?? null;
     const shippingAddress = customer?.shipping || null;
@@ -192,7 +214,13 @@ export default function AuthPage() {
                 label="Password"
                 type="password"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(e) => {
+                  const nextPassword = e.target.value;
+                  setPassword(nextPassword);
+                  if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/.test(nextPassword)) {
+                    setPassTooltipVisible(true);
+                  }
+                }}
                 toggle
                 show={showPass}
                 onToggle={() => setShowPass((p) => !p)}
@@ -206,7 +234,13 @@ export default function AuthPage() {
                   label="Confirm password"
                   type="password"
                   value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  onChange={(e) => {
+                    const nextPassword = e.target.value;
+                    setConfirmPassword(nextPassword);
+                    if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/.test(nextPassword)) {
+                      setConfirmTooltipVisible(true);
+                    }
+                  }}
                   toggle
                   show={showConfirm}
                   onToggle={() => setShowConfirm((p) => !p)}

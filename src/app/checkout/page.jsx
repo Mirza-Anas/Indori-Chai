@@ -370,11 +370,6 @@ export default function CheckoutPage() {
       return;
     }
 
-    if (paymentMethod !== "cod") {
-      toast.info("Online payment is not connected yet. Please use Cash on Delivery for now.");
-      return;
-    }
-
     const formData = new FormData(event.currentTarget);
     const shippingAddress = buildAddress(formData, "shipping");
     const billingAddress = billingSameAsShipping
@@ -389,7 +384,7 @@ export default function CheckoutPage() {
       billing: billingAddress,
       shipping: shippingAddress,
       items: buildOrderItems(cartItems),
-      payment_method: "cod",
+      payment_method: paymentMethod,
       customer_note: customerNote,
       customer_email: customerEmail,
       ...(Number.isFinite(syncedCustomerId) && syncedCustomerId > 0 ? { customer_id: syncedCustomerId } : {}),
@@ -410,18 +405,30 @@ export default function CheckoutPage() {
           throw new Error(data?.error || "Failed to create order");
         }
 
+        if (paymentMethod === "online" && !data?.payment?.redirectUrl) {
+          throw new Error("Unable to start online payment");
+        }
+
         return data;
       });
 
       toast.promise(createOrderPromise, {
         loading: "Placing your order...",
         success: (result) =>
-          `Order placed successfully${result?.order?.id ? ` #${result.order.id}` : ""}.`,
+          paymentMethod === "online"
+            ? "Redirecting to secure payment..."
+            : `Order placed successfully${result?.order?.id ? ` #${result.order.id}` : ""}.`,
         error: (error) => error?.message || "Failed to place the order",
       });
 
-      await createOrderPromise;
+      const result = await createOrderPromise;
       clearCart?.();
+
+      if (paymentMethod === "online") {
+        window.location.assign(result.payment.redirectUrl);
+        return;
+      }
+
       router.push("/products");
     } catch (error) {
       console.error("Checkout order error:", error);

@@ -4,10 +4,8 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import {
   LuArrowLeft,
-  LuChevronDown,
   LuChevronLeft,
   LuChevronRight,
-  LuChevronUp,
 } from "react-icons/lu";
 import { useAuth } from "@/context/AuthContext";
 
@@ -27,12 +25,6 @@ const formatCurrency = (total) =>
     maximumFractionDigits: 2,
   }).format(Number(total || 0));
 
-const getItemsSubtotal = (items = []) =>
-  items.reduce(
-    (subtotal, item) => subtotal + Number(item.subtotal ?? item.total ?? 0),
-    0
-  );
-
 export default function OrdersPage() {
   const { user, hydrated } = useAuth();
   const [orders, setOrders] = useState([]);
@@ -40,7 +32,6 @@ export default function OrdersPage() {
   const [totalPages, setTotalPages] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
-  const [expandedOrderId, setExpandedOrderId] = useState(null);
 
   const customerId = user?.customer?.id ?? user?.customer_id;
 
@@ -63,7 +54,6 @@ export default function OrdersPage() {
 
         setOrders(Array.isArray(data.orders) ? data.orders : []);
         setTotalPages(Number(data.pagination?.totalPages || 0));
-        setExpandedOrderId(null);
       } catch (fetchError) {
         setError(fetchError.message || "Failed to fetch orders");
         setOrders([]);
@@ -141,7 +131,11 @@ export default function OrdersPage() {
           ) : (
             <div className="divide-y divide-gray-200">
               {orders.map((order) => (
-                <div key={order.id} className="py-5 first:pt-0 last:pb-0">
+                <Link
+                  key={order.id}
+                  href={`/user/orders/${order.id}`}
+                  className="group block rounded-sm px-3 py-5 transition-colors hover:bg-[#fbf6f4] first:pt-0 last:pb-0"
+                >
                   <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                     <div>
                       <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-gray-400">
@@ -152,94 +146,21 @@ export default function OrdersPage() {
                         {order.line_items?.length || 0} {order.line_items?.length === 1 ? "item" : "items"}
                       </p>
                     </div>
-                    <div className="flex items-center justify-between gap-6 sm:justify-end">
+                    <div className="flex items-center gap-5">
                       <div className="sm:text-right">
                         <p className="text-lg font-medium text-gray-800">{formatCurrency(order.total)}</p>
                         <p className="mt-2 text-[10px] font-semibold uppercase tracking-[0.22em] text-[#b5433a]">
                           {order.status || "Pending"}
                         </p>
                       </div>
-                      <button
-                        type="button"
-                        aria-expanded={expandedOrderId === order.id}
-                        aria-label={`${expandedOrderId === order.id ? "Hide" : "View"} details for order ${order.number || order.id}`}
-                        onClick={() =>
-                          setExpandedOrderId((currentId) =>
-                            currentId === order.id ? null : order.id
-                          )
-                        }
-                        className="inline-flex h-10 w-10 items-center justify-center border border-gray-300 text-gray-600 transition-colors hover:border-[#b5433a] hover:text-[#b5433a]"
-                      >
-                        {expandedOrderId === order.id ? (
-                          <LuChevronUp size={18} strokeWidth={1.8} />
-                        ) : (
-                          <LuChevronDown size={18} strokeWidth={1.8} />
-                        )}
-                      </button>
+                      <LuChevronRight
+                        size={18}
+                        strokeWidth={1.8}
+                        className="text-gray-300 transition-colors group-hover:text-[#b5433a]"
+                      />
                     </div>
                   </div>
-
-                  {expandedOrderId === order.id && (
-                    <div className="mt-5 border-t border-gray-200 pt-5">
-                      <div className="space-y-4">
-                        {order.line_items?.map((item) => {
-                          const thumbnail = item.image?.src || item.image?.url;
-                          const quantity = Number(item.quantity || 1);
-                          const lineTotal = Number(item.total ?? item.subtotal ?? 0);
-                          const unitPrice = Number(item.price ?? lineTotal / quantity);
-
-                          return (
-                            <div
-                              key={item.id}
-                              className="flex items-center gap-4 border-b border-gray-100 pb-4 last:border-b-0 last:pb-0"
-                            >
-                              {thumbnail ? (
-                                <img
-                                  src={thumbnail}
-                                  alt={item.name || "Ordered product"}
-                                  className="h-16 w-16 border border-gray-200 object-cover"
-                                />
-                              ) : (
-                                <div className="flex h-16 w-16 shrink-0 items-center justify-center border border-gray-200 bg-[#f0efed] text-center text-[9px] uppercase tracking-[0.12em] text-gray-400">
-                                  No image
-                                </div>
-                              )}
-                              <div className="min-w-0 flex-1">
-                                <p className="font-serif text-lg leading-tight text-gray-800">{item.name}</p>
-                                <p className="mt-1 text-xs text-gray-500">
-                                  {quantity} × {formatCurrency(unitPrice)}
-                                </p>
-                              </div>
-                              <div className="text-right">
-                                <p className="text-sm font-medium text-gray-800">
-                                  {formatCurrency(lineTotal)}
-                                </p>
-                                <p className="mt-1 text-[10px] uppercase tracking-[0.16em] text-gray-400">
-                                  Line total
-                                </p>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-
-                      <div className="mt-5 border-t border-gray-200 pt-4 text-sm">
-                        <div className="flex justify-between gap-4 text-gray-500">
-                          <span>Items subtotal</span>
-                          <span>{formatCurrency(getItemsSubtotal(order.line_items))}</span>
-                        </div>
-                        <div className="mt-2 flex justify-between gap-4 text-gray-500">
-                          <span>Shipping</span>
-                          <span>{formatCurrency(order.shipping_total)}</span>
-                        </div>
-                        <div className="mt-3 flex justify-between gap-4 border-t border-gray-100 pt-3 font-medium text-gray-800">
-                          <span>Order total</span>
-                          <span>{formatCurrency(order.total)}</span>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
+                </Link>
               ))}
             </div>
           )}
