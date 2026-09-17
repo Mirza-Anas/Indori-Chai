@@ -4,10 +4,13 @@ import gsap from "gsap";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { LuChevronLeft } from "react-icons/lu";
+import { FcGoogle } from "react-icons/fc";
 import { toast } from "sonner";
 import Field from "../../components/authComps/InputField";
 import axios from "axios";
 import { useAuth } from "@/context/AuthContext";
+import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
+import { auth } from "@/server/firebase-client";
 
 // ── Submit button ─────────────────────────────────────────────────────────────
 function SubmitButton({ label, onClickFunc }) {
@@ -40,6 +43,7 @@ export default function AuthPage() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [passTooltipVisible, setPassTooltipVisible] = useState(false);
   const [confirmTooltipVisible, setConfirmTooltipVisible] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
 
   const formRef = useRef(null);
   const indicatorRef = useRef(null);
@@ -156,6 +160,36 @@ export default function AuthPage() {
     }
   };
 
+  const loginWithGoogle = async () => {
+    try {
+      setIsGoogleLoading(true);
+
+      const provider = new GoogleAuthProvider();
+      provider.addScope("profile");
+      provider.addScope("email");
+
+      const result = await signInWithPopup(auth, provider);
+      const firebaseIdToken = await result.user.getIdToken();
+
+      const { data } = await axios.post("/api/auth/google", {
+        firebaseIdToken,
+      });
+
+      storeSignedInUser(data);
+      toast.success("Signed in with Google successfully!");
+    } catch (error) {
+      console.error("Google sign-in error:", error);
+      toast.error(
+        error?.response?.data?.error ||
+          error?.response?.data?.message ||
+          error?.message ||
+          "Failed to sign in with Google"
+      );
+    } finally {
+      setIsGoogleLoading(false);
+    }
+  };
+
   return (
     <div className="flex min-h-screen bg-white">
       {/* ═══ LEFT — Auth panel ══════════════════════════════════════════════ */}
@@ -178,7 +212,7 @@ export default function AuthPage() {
             </div>
 
             {/* Tab switcher */}
-            <div className="relative mb-10">
+            <div className="relative mb-6">
               <div className="flex border-b border-gray-300">
                 <button
                   ref={signinBtnRef}
@@ -204,6 +238,23 @@ export default function AuthPage() {
                 className="absolute bottom-0 h-0.5 bg-[#b5433a] left-0"
                 style={{ width: "50%" }}
               />
+            </div>
+
+            <div className="mb-8">
+              <button
+                type="button"
+                onClick={loginWithGoogle}
+                disabled={isGoogleLoading}
+                className="flex w-full items-center justify-center gap-3 border border-gray-300 bg-white py-3.5 text-xs font-semibold tracking-wide text-gray-700 transition-colors hover:border-gray-400 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                <FcGoogle size={18} />
+                {isGoogleLoading ? "Signing in with Google..." : "Continue with Google"}
+              </button>
+              <div className="mt-5 flex items-center gap-3 text-[10px] uppercase tracking-[0.22em] text-gray-400">
+                <span className="h-px flex-1 bg-gray-200" />
+                <span>or continue with email</span>
+                <span className="h-px flex-1 bg-gray-200" />
+              </div>
             </div>
 
             {/* Form */}
