@@ -1,37 +1,21 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
 import { LuChevronRight, LuLogOut, LuUser } from "react-icons/lu";
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
 
 export default function UserPage() {
-  const { user, updateUser, logout } = useAuth();
-  const [name, setName] = useState("");
-  const [phone, setPhone] = useState("");
-  const [isSaving, setIsSaving] = useState(false);
-  const [editingName, setEditingName] = useState(false);
-  const [editingPhone, setEditingPhone] = useState(false);
+  const { user, logout } = useAuth();
   const customer = user?.customer || null;
   const profile = user?.profile || {};
   const email = user?.email || customer?.email || "";
+  const displayName =
+    profile.name || customer?.first_name || customer?.display_name || "User";
+  const phone =
+    profile.phone || customer?.phone || customer?.billing?.phone || customer?.shipping?.phone || "";
   const shippingAddress = user?.address?.shipping || customer?.shipping || null;
   const billingAddress = user?.address?.billing || customer?.billing || null;
-
-  useEffect(() => {
-    if (!user) return;
-
-    const initialName =
-      profile.name || customer?.first_name || customer?.display_name || "";
-    const initialPhone =
-      profile.phone || customer?.phone || customer?.billing?.phone || customer?.shipping?.phone || "";
-
-    setName(initialName);
-    setPhone(initialPhone);
-    setEditingName(false);
-    setEditingPhone(false);
-  }, [user, customer, profile.name, profile.phone]);
 
   if (!user) {
     return (
@@ -51,42 +35,9 @@ export default function UserPage() {
     );
   }
 
-  const displayName = name || "User";
-
   const handleLogout = () => {
     logout?.();
     toast.success("Logged out successfully");
-  };
-
-  const handleSave = async () => {
-    try {
-      setIsSaving(true);
-      updateUser?.({
-        profile: {
-          name: name.trim(),
-          phone: phone.trim(),
-        },
-        customer: {
-          ...(user?.customer || {}),
-          first_name: name.trim(),
-          billing: {
-            ...(user?.customer?.billing || {}),
-            phone: phone.trim(),
-          },
-          shipping: {
-            ...(user?.customer?.shipping || {}),
-            phone: phone.trim(),
-          },
-        },
-      });
-      setEditingName(false);
-      setEditingPhone(false);
-      toast.success("Profile updated successfully");
-    } catch (error) {
-      toast.error("Failed to update profile");
-    } finally {
-      setIsSaving(false);
-    }
   };
 
   return (
@@ -118,67 +69,23 @@ export default function UserPage() {
 
             <div className="space-y-5 text-sm">
               <div>
-                <div className="flex items-center justify-between gap-3">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-gray-400">Name</p>
-                  <button
-                    type="button"
-                    onClick={() => setEditingName((prev) => !prev)}
-                    className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-[0.22em] text-gray-500 transition-colors hover:text-[#b5433a]"
-                  >
-                    {editingName ? "Lock" : "Edit"}
-                  </button>
-                </div>
-                <input
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="Enter your name"
-                  readOnly={!editingName}
-                  className={`mt-2 w-full border px-4 py-3 text-base outline-none transition-colors placeholder:text-gray-400 ${
-                    editingName
-                      ? "border-gray-300 bg-white text-gray-800 focus:border-[#b5433a]"
-                      : "cursor-not-allowed border-gray-200 bg-gray-50 text-gray-500"
-                  }`}
-                />
+                <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-gray-400">Name</p>
+                <p className="mt-2 text-base text-gray-800">
+                  {displayName}
+                </p>
               </div>
               <div>
-                <div className="flex items-center justify-between gap-3">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-gray-400">Phone</p>
-                  <button
-                    type="button"
-                    onClick={() => setEditingPhone((prev) => !prev)}
-                    className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-[0.22em] text-gray-500 transition-colors hover:text-[#b5433a]"
-                  >
-                    {editingPhone ? "Lock" : "Edit"}
-                  </button>
-                </div>
-                <input
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="Enter your phone number"
-                  readOnly={!editingPhone}
-                  className={`mt-2 w-full border px-4 py-3 text-base outline-none transition-colors placeholder:text-gray-400 ${
-                    editingPhone
-                      ? "border-gray-300 bg-white text-gray-800 focus:border-[#b5433a]"
-                      : "cursor-not-allowed border-gray-200 bg-gray-50 text-gray-500"
-                  }`}
-                />
+                <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-gray-400">Phone</p>
+                <p className="mt-2 text-base text-gray-800">
+                  {phone || "Not provided"}
+                </p>
               </div>
               <div>
                 <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-gray-400">Email</p>
-                <input
-                  value={email}
-                  readOnly
-                  className="mt-2 w-full border border-gray-300 bg-gray-50 px-4 py-3 text-base text-gray-500 outline-none cursor-not-allowed"
-                />
+                <p className="mt-2 text-base text-gray-800">
+                  {email || "Not provided"}
+                </p>
               </div>
-
-              <button
-                onClick={handleSave}
-                disabled={isSaving}
-                className="inline-flex items-center justify-center gap-2 bg-[#b5433a] px-5 py-3.5 text-[11px] font-semibold uppercase tracking-[0.25em] text-white transition-colors hover:bg-[#9b3830] disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                {isSaving ? "Saving..." : "Save Profile"}
-              </button>
             </div>
 
             <div className="mt-8 border-t border-gray-200 pt-6">
