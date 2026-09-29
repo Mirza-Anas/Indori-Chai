@@ -1,12 +1,12 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import { FiMenu, FiX, FiShoppingCart, FiUser } from "react-icons/fi";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { useCart } from "@/context/CartContext";
+import { useAuth } from "@/context/AuthContext";
 import Link from "next/link";
 
 export default function Navbar() {
-  const router = useRouter();
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const pathname = usePathname();
@@ -14,6 +14,8 @@ export default function Navbar() {
                       || pathname.includes("/terms&conditions") || pathname.includes("/privacy-policy") || pathname.includes("/refund-policy") 
                       || pathname.includes("/shipping-policy") || pathname.includes("/checkout") || pathname.includes("/user"));
   const { cart } = useCart();
+  const { user, hydrated } = useAuth();
+  const profileHref = hydrated && user ? "/user" : "/auth";
   const count = cart.length || 0;
   useEffect(() => {
     const handleScroll = () => {
@@ -81,7 +83,7 @@ export default function Navbar() {
                 )}
               </div>
             </Link>
-            <Link href="/auth">
+            <Link href={profileHref}>
               <FiUser strokeWidth={3} className="transition cursor-pointer hover:opacity-70" />
             </Link>
           </div>
@@ -122,7 +124,7 @@ export default function Navbar() {
             <Link onClick={() => setMenuOpen(!menuOpen)} href="/cart">
               <FiShoppingCart />
             </Link>
-            <Link onClick={() => setMenuOpen(!menuOpen)} href="/auth">
+            <Link onClick={() => setMenuOpen(!menuOpen)} href={profileHref}>
               <FiUser />
             </Link>
           </div>

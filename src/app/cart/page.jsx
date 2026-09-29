@@ -7,18 +7,30 @@ import { useCart } from "@/context/CartContext";
 // ─────────────────────────────────────────────────────────────────────────────
 // Utility: calculate cart totals
 // ─────────────────────────────────────────────────────────────────────────────
+function getItemGrossPrice(item) {
+  const variationPrice = item?.variation?.prices?.price;
+  const rawPrice = variationPrice != null
+    ? Number(variationPrice) / 100
+    : Number(item?.price || 0);
+
+  return Math.round(rawPrice);
+}
+
+function formatMoney(value) {
+  return `\u20B9${Math.round(Number(value || 0))}`;
+}
+
 function calculateCartTotals(cartItems = []) {
   const subtotal = cartItems.reduce((sum, item) => {
-    const price = parseFloat(item?.variation?.prices?.price / 100 ?? item?.price ?? 0);
+    const price = getItemGrossPrice(item);
     const qty   = parseInt(item?.quantity ?? 1, 10);
     return sum + price * qty;
   }, 0);
 
   const shipping = 0;  // Free — update logic as needed
-  const tax      = 0;  // Add GST logic here if needed
-  const total    = subtotal + shipping + tax;
+  const total = subtotal + shipping;
 
-  return { subtotal, shipping, tax, total };
+  return { subtotal, shipping, total };
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -27,7 +39,7 @@ function calculateCartTotals(cartItems = []) {
 // Desktop: single horizontal row with all columns
 // ─────────────────────────────────────────────────────────────────────────────
 function CartRow({ item, onRemove, onQtyChange }) {
-  const price     = parseFloat(item?.variation?.prices?.price / 100 ?? 0);
+  const price     = getItemGrossPrice(item);
   const qty       = parseInt(item?.quantity ?? 1, 10);
   const lineTotal = price * qty;
 
@@ -52,7 +64,7 @@ function CartRow({ item, onRemove, onQtyChange }) {
             {item?.variation?.variation && (
               <p className="text-[11px] text-gray-400 tracking-wide mt-0.5">{item.variation.variation}</p>
             )}
-            <p className="text-[11px] text-gray-400 mt-1">₹{price.toFixed(2)} each</p>
+            <p className="text-[11px] text-gray-400 mt-1">{formatMoney(price)} each</p>
           </div>
 
           <button
@@ -82,7 +94,7 @@ function CartRow({ item, onRemove, onQtyChange }) {
               <LuPlus size={11} strokeWidth={2} />
             </button>
           </div>
-          <p className="text-sm font-semibold text-gray-800">₹{lineTotal.toFixed(2)}</p>
+          <p className="text-sm font-semibold text-gray-800">{formatMoney(lineTotal)}</p>
         </div>
 
       </div>
@@ -114,7 +126,7 @@ function CartRow({ item, onRemove, onQtyChange }) {
         </div>
 
         <div className="w-20 text-sm text-center text-gray-500 shrink-0">
-          ₹{price.toFixed(2)}
+          {formatMoney(price)}
         </div>
 
         <div className="flex items-center border border-gray-400 shrink-0">
@@ -135,7 +147,7 @@ function CartRow({ item, onRemove, onQtyChange }) {
         </div>
 
         <div className="w-20 text-sm font-semibold text-right text-gray-800 shrink-0">
-          ₹{lineTotal.toFixed(2)}
+          {formatMoney(lineTotal)}
         </div>
 
       </div>
@@ -158,7 +170,7 @@ export default function CartPage() {
     applyCoupon,
   } = useCart();
 
-  const { subtotal, shipping, tax, total } = calculateCartTotals(cartItems);
+  const { subtotal, shipping, total } = calculateCartTotals(cartItems);
   const isEmpty = cartItems.length === 0;
 
   return (
@@ -253,30 +265,27 @@ export default function CartPage() {
                   <div className="flex items-center justify-between text-gray-500">
                     <span>Shipping</span>
                     <span className={shipping === 0 ? "text-green-600 font-medium" : "text-gray-700"}>
-                      {shipping === 0 ? "Free" : `₹${shipping.toFixed(2)}`}
+                      {shipping === 0 ? "Free" : formatMoney(shipping)}
                     </span>
                   </div>
                   <p className="text-[11px] text-gray-400 mt-0.5!">3–5 Business Days</p>
 
                   <div className="flex items-center justify-between pt-1 text-gray-500">
-                    <span>TAX (GST estimated)</span>
-                    <span className="text-gray-700">₹{tax.toFixed(2)}</span>
-                  </div>
-
-                  <div className="flex items-center justify-between pt-1 text-gray-500">
                     <span>Subtotal</span>
-                    <span className="text-gray-700">₹{subtotal.toFixed(2)}</span>
+                    <span className="text-gray-700">{formatMoney(subtotal)}</span>
                   </div>
+                  <p className="text-right text-[10px] text-gray-400">(GST included)</p>
 
                   <div className="pt-4 mt-2 border-t border-gray-200">
                     <div className="flex items-center justify-between">
                       <span className="text-sm font-semibold text-gray-800">Total</span>
-                      <span className="font-serif text-lg text-gray-900">₹{total.toFixed(2)}</span>
+                      <span className="font-serif text-lg text-gray-900">{formatMoney(total)}</span>
                     </div>
                   </div>
                 </div>
 
                 <button
+                  type="button"
                   onClick={() => router.push("/checkout")}
                   className="w-full mt-7 py-3.5 bg-[#b5433a] hover:bg-[#9b3830] text-white text-[11px] tracking-[0.25em] uppercase font-semibold transition-colors duration-300"
                 >

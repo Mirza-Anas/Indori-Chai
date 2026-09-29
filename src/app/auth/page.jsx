@@ -34,7 +34,7 @@ function SubmitButton({ label, onClickFunc }) {
 // ── Main page ─────────────────────────────────────────────────────────────────
 export default function AuthPage() {
   const router = useRouter();
-  const { user, setUser } = useAuth();
+  const { setUser } = useAuth();
   const [mode, setMode] = useState("signin");
   const [showPass, setShowPass] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
@@ -60,12 +60,6 @@ export default function AuthPage() {
       ease: "power2.out",
     });
   }, [mode]);
-
-  useEffect(() => {
-    if (user) {
-      router.replace("/user");
-    }
-  }, [user, router]);
 
   useEffect(() => {
     const strongPassword = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
@@ -149,6 +143,7 @@ export default function AuthPage() {
         console.log(data);
         storeSignedInUser(data);
         toast.success("Signed in successfully!");
+        router.replace("/products");
       }
     } catch (error) {
       console.log("Signup error:", error);
@@ -177,6 +172,7 @@ export default function AuthPage() {
 
       storeSignedInUser(data);
       toast.success("Signed in with Google successfully!");
+      router.replace("/products");
     } catch (error) {
       console.error("Google sign-in error:", error);
       toast.error(

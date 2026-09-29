@@ -59,18 +59,26 @@ const INDIAN_STATES = [
   "Puducherry",
 ];
 
+function getItemGrossPrice(item) {
+  const variationPrice = item?.variation?.prices?.price;
+  const rawPrice = variationPrice != null
+    ? Number(variationPrice) / 100
+    : Number(item?.price || 0);
+
+  return Math.round(rawPrice);
+}
+
 function calculateCartTotals(cartItems = []) {
   const subtotal = cartItems.reduce((sum, item) => {
-    const price = parseFloat(item?.variation?.prices?.price / 100 ?? item?.price ?? 0);
+    const price = getItemGrossPrice(item);
     const qty = parseInt(item?.quantity ?? 1, 10);
     return sum + price * qty;
   }, 0);
 
   const shipping = 0;
-  const tax = 0;
-  const total = subtotal + shipping + tax;
+  const total = subtotal + shipping;
 
-  return { subtotal, shipping, tax, total };
+  return { subtotal, shipping, total };
 }
 
 function buildAddress(formData, prefix) {
@@ -107,7 +115,7 @@ function buildOrderItems(cartItems = []) {
 }
 
 function formatMoney(value) {
-  return `₹${Number(value || 0).toFixed(2)}`;
+  return `\u20B9${Math.round(Number(value || 0))}`;
 }
 
 function CheckoutField({ label, name, type = "text", placeholder, autoComplete, ...inputProps }) {
@@ -287,7 +295,7 @@ function PaymentOption({ id, title, description, icon: Icon, selected, onSelect 
 }
 
 function OrderItem({ item }) {
-  const price = parseFloat(item?.variation?.prices?.price / 100 ?? item?.price ?? 0);
+  const price = getItemGrossPrice(item);
   const qty = parseInt(item?.quantity ?? 1, 10);
   const lineTotal = price * qty;
 
@@ -328,7 +336,8 @@ export default function CheckoutPage() {
   const [paymentMethod, setPaymentMethod] = useState("cod");
   const [billingSameAsShipping, setBillingSameAsShipping] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { subtotal, shipping, tax, total } = calculateCartTotals(cartItems);
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  const { subtotal, shipping, total } = calculateCartTotals(cartItems);
   const isEmpty = cartItems.length === 0;
   const customer = user?.customer || null;
   const profile = user?.profile || {};
@@ -663,10 +672,7 @@ export default function CheckoutPage() {
                     {shipping === 0 ? "Free" : formatMoney(shipping)}
                   </span>
                 </div>
-                <div className="flex items-center justify-between text-gray-500">
-                  <span>GST estimated</span>
-                  <span className="text-gray-700">{formatMoney(tax)}</span>
-                </div>
+                <p className="text-right text-[10px] text-gray-400">(GST included)</p>
 
                 <div className="border-t border-gray-200 pt-4">
                   <div className="flex items-center justify-between">
@@ -711,11 +717,30 @@ export default function CheckoutPage() {
                 </div>
               </div>
 
+              <label className="mb-5 flex items-start gap-2 text-[11px] leading-relaxed text-gray-500">
+                <input
+                  type="checkbox"
+                  checked={termsAccepted}
+                  onChange={(event) => setTermsAccepted(event.target.checked)}
+                  className="mt-0.5 h-3.5 w-3.5 shrink-0 accent-[#b5433a]"
+                />
+                <span>
+                  I agree to the{" "}
+                  <Link
+                    href="/terms&conditions"
+                    className="text-gray-700 underline underline-offset-2 hover:text-[#b5433a]"
+                  >
+                    Terms and Conditions
+                  </Link>
+                  .
+                </span>
+              </label>
+
               {paymentMethod === "cod" ? (
                 <button
                   type="submit"
-                  disabled={isSubmitting}
-                  className="inline-flex w-full items-center justify-center gap-2 bg-[#b5433a] px-5 py-3.5 text-[11px] font-semibold uppercase tracking-[0.25em] text-white transition-colors duration-300 hover:bg-[#9b3830]"
+                  disabled={isSubmitting || !termsAccepted}
+                  className="inline-flex w-full items-center justify-center gap-2 bg-[#b5433a] px-5 py-3.5 text-[11px] font-semibold uppercase tracking-[0.25em] text-white transition-colors duration-300 hover:bg-[#9b3830] disabled:cursor-not-allowed disabled:opacity-45 disabled:hover:bg-[#b5433a]"
                 >
                   {isSubmitting ? "Placing order..." : "Place order"}
                   <LuArrowRight size={13} strokeWidth={2} />
@@ -723,8 +748,8 @@ export default function CheckoutPage() {
               ) : (
                 <button
                   type="submit"
-                  disabled={isSubmitting}
-                  className="inline-flex w-full items-center justify-center gap-2 bg-[#b5433a] px-5 py-3.5 text-[11px] font-semibold uppercase tracking-[0.25em] text-white transition-colors duration-300 hover:bg-[#9b3830]"
+                  disabled={isSubmitting || !termsAccepted}
+                  className="inline-flex w-full items-center justify-center gap-2 bg-[#b5433a] px-5 py-3.5 text-[11px] font-semibold uppercase tracking-[0.25em] text-white transition-colors duration-300 hover:bg-[#9b3830] disabled:cursor-not-allowed disabled:opacity-45 disabled:hover:bg-[#b5433a]"
                 >
                   {isSubmitting ? "Processing..." : "Proceed to pay"}
                   <LuArrowRight size={13} strokeWidth={2} />

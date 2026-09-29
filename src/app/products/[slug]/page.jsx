@@ -116,7 +116,7 @@ export default function ProductDetail() {
   }
 
   function changeQuantity(delta) {
-    setQuantity((prev) => clamp(prev + delta, 1, 99));
+    setQuantity((prev) => clamp(prev + delta, 1, 10));
     gsap.fromTo(qtyRef.current, { scale: 0.8 }, { scale: 1, duration: 0.2, ease: "back.out(2)" });
   }
 
