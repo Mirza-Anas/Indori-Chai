@@ -27,7 +27,7 @@ export default function ProductDetail() {
   const displayPrice =
     activeVariation?.prices?.price?.slice(0, -2) * quantity ??
     product?.prices?.price?.slice(0, -2) * quantity ??
-    "â€”";
+    null;
 
   const priceRef = useRef(null);
   const weightLabelRef = useRef(null);

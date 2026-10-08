@@ -37,7 +37,7 @@ export default function ProductInfo({
 
       <div className="mt-3 mb-5">
         <p ref={priceRef} className="text-3xl font-serif text-[#b5433a]">
-          {displayPrice !== "â€”" ? `â‚¹${displayPrice}` : "â€”"}
+          {displayPrice != null ? `\u20B9${displayPrice}` : "\u2014"}
         </p>
       </div>
 
@@ -62,7 +62,7 @@ export default function ProductInfo({
                 <LuChevronLeft size={16} strokeWidth={1.5} />
               </button>
               <span ref={weightLabelRef} className="flex-1 text-sm font-medium text-center text-gray-700">
-                {activeVariation?.variation?.split(": ")?.[1] ?? "â€”"}
+                {activeVariation?.variation?.split(": ")?.[1] ?? "\u2014"}
               </span>
               <button onClick={() => onWeightChange(1)} disabled={weightIndex === variations.length - 1} className="text-gray-400 transition-colors hover:text-gray-700 disabled:opacity-25">
                 <LuChevronRight size={16} strokeWidth={1.5} />
@@ -74,7 +74,7 @@ export default function ProductInfo({
         <div>
           <p className="text-[10px] tracking-[0.2em] uppercase text-gray-400 mb-3 font-semibold">Quantity</p>
           <div className="flex items-center border border-gray-300">
-            <button onClick={() => onQuantityChange(-1)} className="px-3 py-2 text-lg leading-none text-gray-400 transition-colors hover:text-gray-700 hover:bg-gray-50">âˆ’</button>
+            <button onClick={() => onQuantityChange(-1)} className="px-3 py-2 text-lg leading-none text-gray-400 transition-colors hover:text-gray-700 hover:bg-gray-50">{"\u2212"}</button>
             <span ref={qtyRef} className="w-10 text-sm font-medium text-center text-gray-700 select-none">{quantity}</span>
             <button onClick={() => onQuantityChange(1)} className="px-3 py-2 text-lg leading-none text-gray-400 transition-colors hover:text-gray-700 hover:bg-gray-50">+</button>
           </div>
