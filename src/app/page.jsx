@@ -5,6 +5,14 @@ import ProductHome from "../components/ProductHome";
 import Introduction from "../components/Introduction";
 import Footer from "../components/Footer";
 import WhyCooseUs from "../components/WhyCooseUs";
+import { createPageMetadata } from "@/lib/seo";
+
+export const metadata = createPageMetadata({
+  title: "Premium Indian Tea Online",
+  description:
+    "Discover authentic Indori Chai blends made from quality tea leaves. Shop refreshing Indian tea for everyday chai moments, delivered across India.",
+  path: "/",
+});
 
 export default function Home() {
   return (

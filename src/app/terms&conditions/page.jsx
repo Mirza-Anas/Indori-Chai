@@ -1,5 +1,13 @@
 import Link from "next/link";
 import { LuChevronLeft } from "react-icons/lu";
+import { createPageMetadata } from "@/lib/seo";
+
+export const metadata = createPageMetadata({
+  title: "Terms and Conditions",
+  description:
+    "Read the terms that apply when browsing Indori Chai, placing an order, and using our online store.",
+  path: "/terms%26conditions",
+});
 
 const sections = [
   {

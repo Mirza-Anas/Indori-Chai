@@ -1,5 +1,13 @@
 import Link from "next/link";
 import { LuChevronLeft, LuTruck, LuMapPin, LuMail, LuClock, LuCircleAlert } from "react-icons/lu";
+import { createPageMetadata } from "@/lib/seo";
+
+export const metadata = createPageMetadata({
+  title: "Shipping and Delivery",
+  description:
+    "Find Indori Chai shipping coverage, order dispatch timelines, delivery estimates, tracking, and shipping charges.",
+  path: "/shipping-policy",
+});
 
 const highlights = [
   {

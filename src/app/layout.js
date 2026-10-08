@@ -4,6 +4,7 @@ import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import { Toaster } from "sonner";
 import { AppProvider } from "@/context/AppProvider";
+import { DEFAULT_DESCRIPTION, SITE_NAME, SITE_URL } from "@/lib/seo";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -16,9 +17,28 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata = {
-  title: "Indori Chai | Premium Indian Tea at Affordable Prices",
-  description:
-    "Buy Indori Chai online - premium Indian tea with a strong, authentic taste at an affordable price. Enjoy delicious, refreshing tea made for everyday chai lovers.",
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: "Indori Chai | Premium Indian Tea at Affordable Prices",
+    template: "%s | Indori Chai",
+  },
+  description: DEFAULT_DESCRIPTION,
+  applicationName: SITE_NAME,
+  verification: {
+    google: "Ip3GwlrfZWEwm-Oh66t_n4up-vD3k1uA4n4CbJ9n8SM",
+  },
+  openGraph: {
+    type: "website",
+    locale: "en_IN",
+    siteName: SITE_NAME,
+    title: "Indori Chai | Premium Indian Tea at Affordable Prices",
+    description: DEFAULT_DESCRIPTION,
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Indori Chai | Premium Indian Tea at Affordable Prices",
+    description: DEFAULT_DESCRIPTION,
+  },
 };
 
 export default function RootLayout({ children }) {

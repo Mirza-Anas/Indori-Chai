@@ -1,5 +1,13 @@
 import Link from "next/link";
 import { LuChevronLeft, LuCircleCheckBig } from "react-icons/lu";
+import { createPageMetadata } from "@/lib/seo";
+
+export const metadata = createPageMetadata({
+  title: "Returns and Refund Policy",
+  description:
+    "Review Indori Chai's order cancellation, returns, replacement, and refund policy for tea purchases.",
+  path: "/refund-policy",
+});
 
 const policies = [
   {

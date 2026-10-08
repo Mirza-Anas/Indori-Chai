@@ -1,5 +1,13 @@
 import Link from "next/link";
 import { LuChevronLeft } from "react-icons/lu";
+import { createPageMetadata } from "@/lib/seo";
+
+export const metadata = createPageMetadata({
+  title: "Privacy Policy",
+  description:
+    "Learn how Indori Chai collects, uses, stores, and protects information when you browse or shop with us.",
+  path: "/privacy-policy",
+});
 
 const sections = [
   {
