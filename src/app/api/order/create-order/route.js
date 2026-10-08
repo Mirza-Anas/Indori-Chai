@@ -173,22 +173,6 @@ export const POST = async (request) => {
 
     const { data } = await wcApi.post(`${baseUrl}/orders`, orderData);
 
-    console.log("WooCommerce order tax details:", {
-      orderId: data?.id,
-      subtotal: data?.subtotal,
-      total: data?.total,
-      totalTax: data?.total_tax,
-      taxLines: data?.tax_lines,
-      lineItems: data?.line_items?.map((item) => ({
-        id: item.id,
-        name: item.name,
-        subtotal: item.subtotal,
-        subtotalTax: item.subtotal_tax,
-        total: item.total,
-        totalTax: item.total_tax,
-      })),
-    });
-
     if (payment_method === "online") {
       const amountInPaise = Math.round(Number(data.total || 0) * 100);
       const phoneNumber = String(
